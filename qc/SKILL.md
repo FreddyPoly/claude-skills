@@ -1,6 +1,6 @@
 ---
 name: qc
-description: Guide the user through manually testing a complete feature (issues under issues/<feature-slug>/, all owner:agent/placeholder issues status:done) against SPEC.md, so the user — not the agent — confirms it works. Derives a test script from the spec and the feature's issues (adding security scenarios when flagged security: true, excluding placeholder details like colors/copy from pass/fail judgment, noting gaps from any open owner:user blocker), drives the app to each scenario (via the run skill), and records verdicts on issues/FEATURES.md. Recommends a full security-review pass once every feature has passed, plus a summary of remaining open issues/placeholders. On failure, investigates which issue(s) are responsible, writes feedback into them, and reopens them for implement-issue. Use to test/verify a finished feature, or invoke /qc. Requires SPEC.md and a done feature under issues/.
+description: Before testing anything, gets the project into a known-good running state — runs its test suite and, if it has one, its release build/publish step (commands read from CLAUDE.md, or asked for once and offered back into it), stopping a conflicting running instance first if needed, then launches the built artifact directly (falling back to the run skill only when there's no distinct build output) — hard-stopping and attributing to the relevant issue on any test/build failure. Then guides the user through manually testing a complete feature (issues under issues/<feature-slug>/, all owner:agent/placeholder issues status:done) against SPEC.md, so the user — not the agent — confirms it works. Derives a scenario checklist from the spec and the feature's issues (adding security scenarios when flagged security: true, excluding placeholder details like colors/copy from pass/fail judgment, noting gaps from any open owner:user blocker), drives the already-running app to each scenario, and records verdicts on issues/FEATURES.md. Recommends a full security-review pass once every feature has passed, plus a summary of remaining open issues/placeholders. On any test/build failure or failed scenario, investigates which issue(s) are responsible, writes feedback into them, and reopens them for implement-issue. Use to test/verify a finished feature, or invoke /qc. Requires SPEC.md and a done feature under issues/.
 ---
 
 # qc
@@ -8,6 +8,49 @@ description: Guide the user through manually testing a complete feature (issues 
 Confirm that a complete feature works, with the user actually trying it — not the agent
 self-certifying. The agent's job is to figure out what to test and set it up; judging whether it
 works is the user's call.
+
+## Automated checks & build
+
+Before touching `issues/FEATURES.md` or picking a feature, get the project into a known-good,
+running state — there's no point walking the user through scenarios against a build that doesn't
+even pass its own tests.
+
+### Finding the commands
+
+Look for a documented `## Commands` section (or equivalent) in the project's `CLAUDE.md` for: the
+test-suite command, a release/production build-or-publish command (if the project has one), a
+command to stop a conflicting running instance (if relaunching could hit a file lock or a busy
+port), and how to launch the built artifact. Use exactly what's documented there — don't guess from
+`package.json` scripts, `Makefile` targets, or other language-specific conventions.
+
+If a command isn't documented and you need it, ask the user once. Offer — don't force — to write
+their answer into CLAUDE.md's Commands section afterward, so future `/qc` runs don't have to ask
+again.
+
+If the project genuinely has no automated test suite, no distinct build/publish step, or nothing
+that could conflict with a fresh launch, skip that part gracefully — don't block the rest of the
+flow demanding a step that doesn't apply to this project.
+
+### Running it
+
+1. If a "stop the running instance" command is documented, run it first — avoids a build/publish
+   failing because a previous run is still holding a file lock or a port.
+2. Run the test suite, if one exists. A failing suite **hard-stops** the whole `/qc` pass: report
+   the failures, then handle each one exactly like a failed manual scenario under "On failure"
+   below — investigate which issue is responsible, append feedback, reopen it, update
+   `issues/INDEX.md` — except when a failure clearly isn't attributable to any specific issue (a
+   missing dependency, a broken environment), in which case report it plainly as a blocker instead
+   of forcing an attribution. Either way, stop here — don't proceed to the build step or the manual
+   checklist.
+3. Run the build/publish step, if one exists. Same hard-stop-and-attribute (or report-as-blocker)
+   handling on failure as the test suite.
+4. Launch what the build step just produced, using the exact path/command it gave you — don't
+   re-derive it through the `run` skill's own detection. Only fall back to the `run` skill if the
+   project has no distinct build output to point at (a dev server, an interpreted script, a library
+   with no standalone artifact).
+
+Leave this instance running — the manual walkthrough later in this skill drives it directly rather
+than launching anything itself.
 
 ## Selecting a feature
 
@@ -23,7 +66,7 @@ indefinitely; a pending business decision shouldn't stall testing everything els
   its issues last changed (i.e. not already `qc-passed` with nothing reopened since). If none are
   ready, say what's still outstanding instead of testing something incomplete.
 
-## Building the test script
+## Writing the scenario checklist
 
 Don't test issue-by-issue. Read:
 
@@ -57,7 +100,8 @@ Check the feature's issues for two more things before finalizing the script:
 
 ## Running the walkthrough
 
-Use the `run` skill to launch the project. For web/UI features, drive the shared browser pane
+The project should already be running, launched during the "Automated checks & build" phase above
+— drive that instance rather than relaunching it. For web/UI features, drive the shared browser pane
 yourself to each scenario — navigate to the right screen, set up any needed state — then tell the
 user what to look at or try, and wait for them to confirm what they observe rather than deciding
 for them. For CLI/API/non-UI features, run the relevant command/request yourself, show the actual
@@ -94,22 +138,30 @@ plainly rather than letting the milestone message read as an all-clear it isn't.
 
 ## On failure
 
-For each scenario the user flagged:
+For each scenario the user flagged, or each automated check that failed:
 
-- Investigate which issue(s) are responsible, starting with the current feature's own issues —
-  that's usually right. If the problem clearly doesn't map to anything in this feature (e.g. the
-  root cause is in a shared module or a different feature's work this one depends on), widen the
-  search to the rest of `issues/` before asking the user to help narrow it down. Don't force an
-  attribution to this feature just because it's the one being tested.
+- Investigate which issue(s) are responsible. Once a feature has been selected, start with its own
+  issues — that's usually right, and if the problem clearly doesn't map to anything in this feature
+  (e.g. the root cause is in a shared module or a different feature's work this one depends on),
+  widen the search to the rest of `issues/` before asking the user to help narrow it down. Don't
+  force an attribution to this feature just because it's the one being tested. A test/build failure
+  from the "Automated checks & build" phase happens *before* a feature is selected, so there's no
+  "current feature" to start from yet — search `issues/` directly based on what the failure
+  actually implicates.
 - If it's genuinely ambiguous between two or more issues (in this feature or across features), ask
   the user to help narrow it down rather than guessing.
-- Set that issue's `status: in-progress` and append concrete feedback to it (what scenario was
-  tested, what was expected per the feature/spec, what actually happened, any detail the user
-  gave) — enough that `implement-issue` can pick it back up without re-asking the user what went
-  wrong.
+- Set that issue's `status: in-progress` and append concrete feedback to it (what scenario or
+  automated check failed, what was expected per the feature/spec, what actually happened, any
+  detail the user gave) — enough that `implement-issue` can pick it back up without re-asking the
+  user what went wrong.
 - Update `issues/INDEX.md` to reflect the reopened status.
 
-Then set the feature's `Status` in `FEATURES.md` to `qc-failed` and `Last QC` to today's date.
-Report a summary: which scenarios failed, which issues were reopened and why. Don't automatically
-re-invoke `implement-issue` to fix things — reopening is as far as this skill goes; fixing is a
-separate, deliberate next step.
+If a feature had already been selected when the failure occurred (a manual scenario, or an
+automated check run per-feature), also set that feature's `Status` in `FEATURES.md` to `qc-failed`
+and `Last QC` to today's date. A test/build failure from the "Automated checks & build" phase, which
+runs before any feature is picked, has no feature row to update — skip that part and just report
+the reopened issues.
+
+Report a summary: what failed, which issues were reopened and why. Don't automatically re-invoke
+`implement-issue` to fix things — reopening is as far as this skill goes; fixing is a separate,
+deliberate next step.

@@ -64,15 +64,21 @@ nothing important is left unasked:
 ## When to stop
 
 Stop when you could accurately explain the request back to the user — goal, constraints, edge
-cases, and the shape of a solution — without them needing to correct you. At that point, summarize
-the shared understanding back to them in prose (not another round of questions) so it's visible and
-confirmable.
+cases, and the shape of a solution — without them needing to correct you. At that point, print a
+numbered **"Shared Understanding"** summary back to them (not another round of questions) — goal,
+constraints, edge cases, chosen approach, security posture, and any open/deferred items — so it's
+visible and easy to confirm or correct point-by-point.
+
+Then **STOP**. Do not write to `SPEC.md` (or equivalent), do not generate issue files, and do not
+begin planning or implementation. Explicitly ask the user to confirm the summary or tell you what to
+amend. Treat this as a hard gate, not a formality to rush past — wait for their explicit go-ahead
+(or corrections, which you then fold in and re-summarize) before doing anything else.
 
 ## Writing it down
 
-Once the user confirms the summary, capture it in a document at the project root before moving on
-— this is what lets a future agent (or a future you, in a new session) read the project cold and
-start implementing without re-running the interview.
+Once — and only once — the user confirms the summary, capture it in a document at the project root
+before moving on — this is what lets a future agent (or a future you, in a new session) read the
+project cold and start implementing without re-running the interview.
 
 - Reuse `SPEC.md` if the project already has one (see the `documentation` skill's convention);
   create it if not. For a project too small to warrant a dedicated file, a clearly-labeled section
