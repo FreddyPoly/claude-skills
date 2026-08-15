@@ -66,7 +66,43 @@ indefinitely; a pending business decision shouldn't stall testing everything els
   its issues last changed (i.e. not already `qc-passed` with nothing reopened since). If none are
   ready, say what's still outstanding instead of testing something incomplete.
 
-## Writing the scenario checklist
+## Run an automated harness first, if this project documents one
+
+Some projects set up an automated QC harness — a script that drives the app end-to-end and reports
+pass/fail per scenario, meant to run before any manual walkthrough — specifically to kill the
+stale-instance and "did I actually see what I think I saw" failure modes that make manual GUI QC
+unreliable. Whether *this* project has one isn't something to guess at or probe the filesystem
+for: check `SPEC.md` (and `CLAUDE.md` if `SPEC.md` doesn't mention it) for a section describing
+one — the `interview` skill's convention is to document it there, including exactly how to invoke
+it and what shape its output takes, when a project decides to build one. If no such section
+exists, skip straight to "Building the test script" below — most projects don't have one, and this
+skill works fully manually without it. Don't build one yourself here if it's missing; that's a
+separate, deliberate undertaking (see `interview`), not something to improvise mid-QC-pass.
+
+If a harness is documented, run it exactly as that documentation describes, then read whatever
+report it produces (the documentation should say where and in what shape — don't assume a specific
+filename or JSON structure beyond what's actually written down). For the feature being tested, sort
+its results into:
+
+- **Passed, in scope** — don't ask the user to manually re-verify these. Note them in the eventual
+  summary as harness-verified, but they don't get a row in the manual scenario table.
+- **Failed, in scope** — treat exactly like a user flagging "no" on that scenario: skip straight to
+  "On failure" below (investigate, attribute, reopen the responsible issue) without waiting on the
+  user to reproduce it by hand. Still tell the user what failed and why before moving on.
+- **Skipped, marked obsolete/superseded** — the behavior no longer exists (e.g. replaced by a later
+  deliberate change); drop it entirely, it's not a gap.
+- **Skipped for any other reason** (opt-in flag not passed, precondition not met, etc.) — this is
+  still an open gap; carry it into the manual scenario list below, or re-run the harness with
+  whatever flag closes it if that's cheap and the user wants full coverage now.
+
+What's left after this — genuinely uncovered functional scenarios, plus anything the harness is
+structurally unable to observe (audible playback correctness, a physical key/gesture press, a
+tooltip or visual nuance an accessibility tree doesn't capture, a multi-minute real-world
+playthrough too slow to script, or any subjective "does this feel right" judgment) — is exactly
+what the manual walkthrough below should actually spend the user's time on. Say plainly which
+scenarios the harness already cleared so the user knows why they're not being asked about them.
+
+## Building the test script
 
 Don't test issue-by-issue. Read:
 
@@ -97,6 +133,16 @@ Check the feature's issues for two more things before finalizing the script:
   real payment flow needing a real API key) becomes a noted gap, not a scenario: tell the user what
   can't be verified yet and why, rather than skipping it silently or forcing a pass/fail on
   something that structurally can't be checked.
+
+Write the finished scenario list as a table, not prose, with columns `step | action | exact
+expected observable state`. "Exact expected observable state" means the literal thing the user
+should see or hear at that step — specific label text, an exact count, whether a banner/spinner is
+present or absent, audible playback or silence — not a vague "should work correctly." A loose
+scenario is exactly what lets a stale-instance or ambiguous-state false pass slip through; a
+precise one turns the user's job into a quick match-or-mismatch check instead of a judgment call.
+Include at least one negative/edge scenario per feature (e.g. an unavailable resource, a missing
+dependency, an empty state, an out-of-range action) with the same exact-expected-state precision —
+not just the happy path.
 
 ## Running the walkthrough
 
@@ -138,7 +184,8 @@ plainly rather than letting the milestone message read as an all-clear it isn't.
 
 ## On failure
 
-For each scenario the user flagged, or each automated check that failed:
+For each failed scenario — whether the user flagged it manually or the automated harness reported
+it as failed:
 
 - Investigate which issue(s) are responsible. Once a feature has been selected, start with its own
   issues — that's usually right, and if the problem clearly doesn't map to anything in this feature

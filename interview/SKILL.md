@@ -45,6 +45,17 @@ nothing important is left unasked:
   is one for anything handling auth, payments, PII, or external input
 - **Deep-dive across the whole plan** — don't stop at the first layer; each answer usually reveals
   another decision underneath it (this is normal — keep going, don't treat it as scope creep)
+- **QC approach, for projects with a manual or GUI-heavy verification story** — if the feature will
+  mostly get tested by a human clicking through a UI (a native app, a desktop menu bar app, anything
+  without a scriptable API surface), raise whether an automated QC harness is worth setting up: a
+  script that drives the app end-to-end and reports pass/fail per scenario, meant to run before any
+  manual walkthrough. Not every project needs this — for something with a thin or already-scriptable
+  surface (a CLI, a web app already covered by browser automation, a library), plain manual QC is
+  usually fine and raising this would just be noise. It's worth surfacing for projects where manual
+  QC is likely to be repeated often and error-prone (stale running instances, "did I actually see
+  what I think I saw" ambiguity) — the user can always decline. If they want one, this only needs to
+  capture the *decision* and *shape* here, not build it — that's a separate, deliberate
+  implementation task for later (`doc-to-issues`/`implement-issue`, or a dedicated session).
 
 ## How to ask
 
@@ -97,6 +108,12 @@ project cold and start implementing without re-running the interview.
   appending a disconnected new block — update anything the interview just changed or clarified.
 - Leave open questions marked as open if any genuinely remain unresolved (e.g. deferred by the
   user for later) — don't paper over them as decided.
+- If the user wants an automated QC harness (see above), document it in its own SPEC.md section —
+  what it automates, exactly how to invoke it, what shape/location its output takes, and what it
+  deliberately can't cover (so manual QC still knows what's left to it). This is the convention the
+  `qc` skill relies on: it checks SPEC.md for this section and runs the harness accordingly instead
+  of always defaulting to a fully manual walkthrough — so the section needs to be concrete enough to
+  act on, not just "yes we want one someday."
 
 If the result is heading toward code changes, this document is your cue to move into planning
 (e.g. plan mode) next — but don't start writing a plan or touching implementation files while the
