@@ -1,6 +1,6 @@
 ---
 name: doc-to-issues
-description: Turn a project's SPEC.md into small, independently-implementable issue files under issues/, so any agent can pick one up without re-deriving how the spec decomposes into work. Flags issues touching auth, secrets, or untrusted input as security-sensitive, used downstream by implement-issue and qc for extra scrutiny. Classifies each issue's owner — agent (fully agent-doable), user (hard blocker needing credentials/business decisions only the user can supply), or placeholder (soft preference like colors/copy, filled with a flagged default) — so implement-issue knows what it can pick up automatically. Keeps issues in sync on rerun as SPEC.md evolves — adds issues for new content, leaves in-progress/done issues alone except flagging done issues hit by a security change, marks stale issues instead of deleting, keeps FEATURES.md honest. Use when turning a spec into issues/tasks/tickets, or invoking /doc-to-issues. Requires an existing SPEC.md — if none, use interview/brainstorming first.
+description: Turn a project's SPEC.md into small, independently-implementable issue files under issues/, so any agent can pick one up without re-deriving how the spec decomposes into work. Flags issues touching auth, secrets, or untrusted input as security-sensitive, used downstream by implement-issue and qc for extra scrutiny. Classifies each issue's owner — agent (fully agent-doable), user (hard blocker needing credentials/business decisions only the user can supply), or placeholder (soft preference like colors/copy, filled with a flagged default) — so implement-issue knows what it can pick up automatically. Keeps issues in sync on rerun as SPEC.md evolves — adds issues for new content, leaves in-progress/done issues alone except flagging done issues hit by a security change, marks stale issues instead of deleting, keeps FEATURES.md honest. Use when turning a spec into issues/tasks/tickets, or invoking /doc-to-issues. Requires an existing SPEC.md — if none, use interview first.
 ---
 
 # doc-to-issues
@@ -16,7 +16,7 @@ agent work afterward ("implement issue auth-003"), not part of this skill.
 
 Find the spec to translate: `SPEC.md` at the project root, or the equivalent labeled section in
 `CLAUDE.md` if the project uses that convention instead (see the `documentation` skill). If
-neither exists, stop and say so — point the user at the `interview`/`brainstorming` skill rather
+neither exists, stop and say so — point the user at the `interview` skill rather
 than inventing a spec to translate.
 
 Check whether `issues/` already exists. If it does, this is a **sync**, not a fresh generation —

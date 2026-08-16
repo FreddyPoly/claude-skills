@@ -23,7 +23,7 @@ the files as they are *right now*, not what they were the last time anyone looke
 
 Needs `issues/` (from `doc-to-issues`) and ideally `SPEC.md`. If `issues/` doesn't exist, don't
 improvise a report from the codebase alone — tell the user this project hasn't been broken into
-issues yet and point them at `doc-to-issues` (or `brainstorming`/`interview` first if there's no
+issues yet and point them at `doc-to-issues` (or `interview` first if there's no
 `SPEC.md` either).
 
 ## Gathering the current state

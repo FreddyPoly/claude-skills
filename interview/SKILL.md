@@ -1,6 +1,6 @@
 ---
 name: interview
-description: Extensively interview the user about a new idea, feature, or problem before any planning or implementation starts — pain points, edge cases, stack choices, missing specs, missing use cases, security (auth, sensitive data, secrets, untrusted input — always at least raised, never silently skipped), deep-dive across the whole plan. Ends by writing the validated decisions, including a required Security section, to a spec document (SPEC.md or equivalent) so a future agent can pick up the project without repeating the interview. Use whenever the user describes something they want built or solved and wants to be interviewed first, or when they invoke /interview explicitly. Do not use this for small, well-specified requests (typo fixes, one-line changes, "just do X") — it's for genuinely new ideas/features/problems where requirements aren't fully formed yet.
+description: Extensively interview the user about a new idea, feature, or problem before any planning or implementation starts — pain points, edge cases, stack choices, missing specs, missing use cases, security (auth, sensitive data, secrets, untrusted input — always at least raised, never silently skipped), deep-dive across the whole plan. Ends by writing the validated decisions, including a required Security section, to a spec document (SPEC.md or equivalent) so a future agent can pick up the project without repeating the interview. Use whenever the user describes something they want built or solved and wants to be interviewed first, or when they invoke /interview explicitly. Do not use this for small, well-specified requests (typo fixes, one-line changes, "just do X") — it's for genuinely new ideas/features/problems where requirements aren't fully formed yet. Works in any conversation language, English or French included — ask questions and write SPEC.md in whatever language the user is writing in, or the existing spec's language if there's precedent.
 ---
 
 # Interview
@@ -118,3 +118,14 @@ project cold and start implementing without re-running the interview.
 If the result is heading toward code changes, this document is your cue to move into planning
 (e.g. plan mode) next — but don't start writing a plan or touching implementation files while the
 interview is still open.
+
+## Language
+
+Ask questions, print the "Shared Understanding" summary, and write `SPEC.md` in whatever language
+the user is writing in — don't ask which language to use, read it from their messages. If
+`SPEC.md`/`CLAUDE.md` already has content in a different language than the current conversation,
+match the existing document instead of switching it mid-file. This skill's own triggering doesn't
+depend on conversation language, so recognize the need to interview regardless of whether the
+request comes in English, French, or anything else. `doc-to-issues` already expects to match
+whatever language `SPEC.md` is written in (see its own `## Language` section), so a non-English
+spec flows through the rest of the pipeline without extra handling.
