@@ -152,8 +152,20 @@ resolving these (see its stuck-work check).
 skill doesn't set that marker itself since it's only known once the issue is actually built, but
 generate the issue as plain `open` either way and leave the marker to implement-issue.
 
-Markers stack if both apply — a `done` issue can be `⚠️ needs-review ⚠️ placeholder` at once; don't
-let adding one marker clobber another that's already there.
+`implement-issue` also appends `⚠️ pending-review` to every issue it finishes (e.g.
+`done ⚠️ pending-review`), flagging it as available for the optional `review-issue` skill to give
+it an independent second pass. This is a **different marker from `⚠️ needs-review` above** — don't
+conflate them: `⚠️ needs-review` means a security-relevant spec change may have invalidated
+already-shipped work and is set by this skill; `⚠️ pending-review` just means "not yet given the
+optional review-issue pass" and is set by `implement-issue` on every issue it completes, cleared
+back to plain `done` by `review-issue` once it reviews the diff (or left as `in-progress` with
+feedback if `review-issue` finds a real problem). Like the other markers, this skill doesn't set or
+clear `⚠️ pending-review` itself — just be aware it can appear on `done` rows you read during a
+sync.
+
+Markers stack if more than one applies — a `done` issue can be
+`⚠️ needs-review ⚠️ placeholder ⚠️ pending-review` all at once; don't let adding one marker clobber
+another that's already there.
 
 ## issues/FEATURES.md
 

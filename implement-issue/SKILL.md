@@ -1,6 +1,6 @@
 ---
 name: implement-issue
-description: Pick up and implement one unblocked issue from a project's issues/ folder (from doc-to-issues), using the issue file as the source of truth so an agent with no memory of the original interview can still build it correctly. Only picks up owner: agent/placeholder issues — owner: user issues (credentials, business decisions only the user can supply) are skipped and listed as waiting-on-you; placeholder issues (colors, copy) are built with a flagged default, swapped in later. Checks for issues stuck in-progress from an interrupted session, and done issues flagged needs-review by a security spec change, before picking new work. Covers selecting the issue, code-quality rules (existing conventions, no premature abstraction, TDD when tested), code-review before marking done (plus security-review when security: true), and updating docs/backlog after. Use to implement the next issue, work the backlog, or invoke /implement-issue. Requires an issues/ folder — if none, use doc-to-issues first.
+description: Pick up and implement one unblocked issue from a project's issues/ folder (from doc-to-issues), using the issue file as the source of truth so an agent with no memory of the original interview can still build it correctly. Only picks up owner: agent/placeholder issues — owner: user issues (credentials, business decisions only the user can supply) are skipped and listed as waiting-on-you; placeholder issues (colors, copy) are built with a flagged default, swapped in later. Checks for issues stuck in-progress from an interrupted session, and done issues flagged needs-review by a security spec change, before picking new work. Covers selecting the issue, code-quality rules (existing conventions, no premature abstraction, TDD when tested), code-review before marking done (plus security-review when security: true), and updating docs/backlog after. Marks a finished issue done ⚠️ pending-review (rather than plain done) so the optional review-issue skill can later give it an independent second pass — this doesn't block anything downstream, including qc. Use to implement the next issue, work the backlog, or invoke /implement-issue. Requires an issues/ folder — if none, use doc-to-issues first.
 ---
 
 # implement-issue
@@ -172,6 +172,14 @@ adds real time for issues where it has nothing to find.
 - After fixing findings, the issue's own acceptance criteria and tests still need to hold — re-check
   rather than assuming a review-driven change couldn't have broken something.
 
+Once code review (and security-review, if applicable) passes with all findings resolved, mark the
+issue `done ⚠️ pending-review` — not plain `done` — in both the issue file and `issues/INDEX.md`.
+This flags it for the optional `review-issue` skill, which gives the diff one more independent
+read against `SPEC.md` and the issue's acceptance criteria before anyone treats it as fully settled.
+Nothing downstream waits on that marker being cleared — `issues/FEATURES.md` readiness and `qc`
+both treat `done ⚠️ pending-review` the same as plain `done` — it's purely an opt-in flag for
+whoever wants that extra pass. See `review-issue`'s `SKILL.md` for what it does with it.
+
 ## After marking an issue done
 
 Update `issues/INDEX.md` to reflect the new status. If this issue had QC feedback on it (i.e. it
@@ -200,7 +208,10 @@ and listing them:
   decision, an account).
 - **`done ⚠️ placeholder` issues** — what each one is standing in for, so it's easy to tell you have
   real content ready to swap in (see "Resolving a placeholder" above).
+- **`done ⚠️ pending-review` issues** — a one-line mention that these are ready for the optional
+  `review-issue` skill whenever you want that extra pass; not something waiting *on* you the way
+  the other two are, just worth surfacing so it doesn't sit invisible in `issues/INDEX.md`.
 
 This is a passive report, not an interruption — don't stop mid-run to ask about these the way you
 would for stuck in-progress or needs-review work; just make sure nothing waiting on the user is
-invisible. Skip either list (or the whole report) if there's nothing to include.
+invisible. Skip any list (or the whole report) if there's nothing to include.
