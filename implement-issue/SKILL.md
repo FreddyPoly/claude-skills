@@ -1,12 +1,34 @@
 ---
 name: implement-issue
-description: Pick up and implement one unblocked issue from a project's issues/ folder (from doc-to-issues), using the issue file as the source of truth so an agent with no memory of the original interview can still build it correctly. Only picks up owner: agent/placeholder issues — owner: user issues (credentials, business decisions only the user can supply) are skipped and listed as waiting-on-you; placeholder issues (colors, copy) are built with a flagged default, swapped in later. Checks for issues stuck in-progress from an interrupted session, and done issues flagged needs-review by a security spec change, before picking new work. Covers selecting the issue, code-quality rules (existing conventions, no premature abstraction, TDD when tested), code-review before marking done (plus security-review when security: true), and updating docs/backlog after. Marks a finished issue done ⚠️ pending-review (rather than plain done) so the optional review-issue skill can later give it an independent second pass — this doesn't block anything downstream, including qc. Use to implement the next issue, work the backlog, or invoke /implement-issue. Requires an issues/ folder — if none, use doc-to-issues first.
+description: Pick up and implement one unblocked issue from a project's issues/ folder (from doc-to-issues), using the issue file as the source of truth so an agent with no memory of the original interview can still build it correctly. Runs the actual work in a dedicated subagent — same model implement-backlog already uses per issue — so the invoking session's context stays clean and only sees the final summary. Only picks up owner: agent/placeholder issues — owner: user issues (credentials, business decisions only the user can supply) are skipped and listed as waiting-on-you; placeholder issues (colors, copy) are built with a flagged default, swapped in later. Checks for issues stuck in-progress from an interrupted session, and done issues flagged needs-review by a security spec change, before picking new work. Covers selecting the issue, code-quality rules (existing conventions, no premature abstraction, TDD when tested), code-review before marking done (plus security-review when security: true), and updating docs/backlog after. Marks a finished issue done ⚠️ pending-review (rather than plain done) so the optional review-issue skill can later give it an independent second pass — this doesn't block anything downstream, including qc. Use to implement the next issue, work the backlog, or invoke /implement-issue. Requires an issues/ folder — if none, use doc-to-issues first.
 ---
 
 # implement-issue
 
 Implement exactly one issue from `issues/`, treating the issue file as sufficient on its own —
 this is what makes the backlog usable by an agent that never sat through the original interview.
+
+## Running this as a subagent
+
+This skill's real work (reading the issue, implementing, running reviews, updating bookkeeping)
+runs inside a dedicated `Agent` call, not directly in the conversation that invoked
+`/implement-issue` — the same reason `implement-backlog` already delegates per-issue work to
+subagents: it keeps the orchestrating session's context clean and gives the implementation its own
+room to read files, run tests, and iterate without that noise leaking back.
+
+When this skill is invoked:
+
+1. Launch a single `Agent` call — no `isolation: "worktree"`, this subagent edits the current
+   working directory directly, since there's no parallel work for a single issue to collide with.
+   Its prompt is self-contained: everything below this section, plus whatever the user specified
+   (a named issue, or "pick up the next one").
+2. Run it in the foreground (`run_in_background: false`) — invoking `/implement-issue` is a
+   request for an answer now, not a fire-and-forget task.
+3. Once it returns, relay its final summary (which issue, what changed, review findings resolved,
+   the waiting-on-you report) back to the user. Don't re-do or second-guess its work in the parent
+   session.
+
+Everything from here on is the subagent's instructions.
 
 ## Checking for stuck work first
 
@@ -48,14 +70,20 @@ If the user names a specific issue directly ("implement auth-003"), work on that
 scanning for the next unblocked one — but still check its `depends_on` first and flag it if
 something it depends on isn't `done` yet, rather than silently proceeding. If they name an
 `owner: user` issue and are now providing what it needs (a credential's location, a business
-decision, an account being created), that's how those get resolved — see "Resolving a hard
-blocker" below.
+decision, an account being created), that's how those get resolved — see
+`references/hard-blocker.md`.
 
 ## What to read before implementing
 
 Start from the issue file alone: description, acceptance criteria, notes. Then ground yourself in
 the actual codebase the way you would for any change — read the files/modules the issue touches,
 existing patterns nearby, how similar things are already built.
+
+Don't `cat` whole files to do this. Use `grep` (or equivalent) and ranged reads to pull just the
+sections you actually need, and delegate broad or multi-file exploration ("where is this defined,"
+"what else touches this") to an `Explore` agent instead of reading file after file yourself — it
+keeps this subagent's own context from filling up with content that isn't actually needed for the
+issue at hand.
 
 Only open `SPEC.md` (or the project's spec-equivalent) if the issue is genuinely ambiguous and
 reading the code doesn't resolve it. If you find yourself needing the spec regularly to understand
@@ -93,40 +121,9 @@ this is what lets anyone (human or agent) glance at the index and know it's clai
 - Never commit automatically. Implementing and marking an issue done is not, by itself, a request
   to commit — follow the general rule of only committing when the user explicitly asks.
 
-## Implementing an owner: placeholder issue
-
-Build it for real — actual working code, not a stub — using a sensible, clearly-fake-looking
-default in place of the thing only the user can really decide: a reasonable color palette, generic
-but coherent copy, a plain placeholder icon/image. The point is the feature is fully runnable and
-demoable, just not final.
-
-Note in the issue's Notes what's placeholder and what the user needs to supply to finalize it
-(e.g. "using a default blue/gray palette pending your brand colors" or "logo is a generic
-placeholder icon — swap in `/assets/logo.svg` once you have the real one"). When you mark it done,
-append `⚠️ placeholder` to its `Status` cell in `issues/INDEX.md` (see `doc-to-issues`'s
-convention) instead of plain `done`.
-
-## Resolving a placeholder
-
-When the user gives you the real thing a `done ⚠️ placeholder` issue was standing in for (actual
-brand colors, real copy, a logo file), swap it in: replace the placeholder implementation, remove
-the "placeholder pending..." note from the issue, and clear the `⚠️ placeholder` marker in
-`issues/INDEX.md` back to plain `done`. Take it through code review again if the change is
-substantive enough to warrant it (a full visual overhaul) — use judgment the same as for any other
-change, it doesn't need the full definition-of-done ceremony for a one-line color swap.
-
-## Resolving a hard blocker (owner: user)
-
-When the user provides what an `owner: user` issue needs (a decision, a completed account signup,
-a credential now in place), implement it like any other issue: acceptance criteria, tests,
-code/security review, done.
-
-If what they gave you is non-secret information (a company name, a pricing decision, a domain),
-record it in `SPEC.md` the same way the interview would — this is a real decision, not just this
-one issue's detail. If it's a credential or secret, never write the actual value into `SPEC.md`,
-the issue file, or anywhere else — record only that it's been configured and where (e.g. "Stripe
-key is set as `STRIPE_SECRET_KEY` in the environment"), consistent with this pipeline's security
-handling elsewhere.
+If this issue is `owner: placeholder`, read `references/placeholder.md` before implementing — it
+covers building a real, demoable default and how to flag it for later. Otherwise this doesn't
+apply.
 
 ## Definition of done
 
@@ -149,17 +146,21 @@ Before marking `status: done`:
 ## Code review
 
 Once acceptance criteria and tests pass, but before marking the issue done, run the `code-review`
-skill (`/code-review`) against this issue's diff. This is a different check than the definition-of-
-done gate above — it's not asking "does it meet the spec," it's catching what passing tests don't:
-security issues, maintainability, convention drift, fragile logic.
+skill (`/code-review`) against **the specific files this issue touched** — the files you actually
+created or edited while implementing it — not the whole branch diff. Nothing in this pipeline
+commits automatically, so a branch-wide diff can easily sweep in unrelated uncommitted work left
+over from other issues still sitting in the working tree; scoping the review to this issue's own
+file list keeps findings relevant to what you actually just wrote. This is a different check than
+the definition-of-done gate above — it's not asking "does it meet the spec," it's catching what
+passing tests don't: security issues, maintainability, convention drift, fragile logic.
 
 If the issue is `security: true` (set by `doc-to-issues`), also run the `security-review` skill
-against the diff — don't rely on `code-review` to catch security-specific issues incidentally.
-This is in addition to code-review, not instead of it: code-review still covers the general
-quality pass, security-review specifically covers what a general reviewer might not weight heavily
-enough (injection, authz bypass, secret handling, unsafe deserialization, and similar). Issues that
-aren't flagged `security: true` skip this extra pass — don't run security-review on everything, it
-adds real time for issues where it has nothing to find.
+against the same file list — don't rely on `code-review` to catch security-specific issues
+incidentally. This is in addition to code-review, not instead of it: code-review still covers the
+general quality pass, security-review specifically covers what a general reviewer might not weight
+heavily enough (injection, authz bypass, secret handling, unsafe deserialization, and similar).
+Issues that aren't flagged `security: true` skip this extra pass — don't run security-review on
+everything, it adds real time for issues where it has nothing to find.
 
 - Findings that are clearly correct and small — fix them directly as part of finishing the issue,
   and mention what was fixed in the end-of-issue summary. Don't open a round trip for something
@@ -174,8 +175,8 @@ adds real time for issues where it has nothing to find.
 
 Once code review (and security-review, if applicable) passes with all findings resolved, mark the
 issue `done ⚠️ pending-review` — not plain `done` — in both the issue file and `issues/INDEX.md`.
-This flags it for the optional `review-issue` skill, which gives the diff one more independent
-read against `SPEC.md` and the issue's acceptance criteria before anyone treats it as fully settled.
+This flags it for the optional `review-issue` skill, which gives the diff one more independent read
+against `SPEC.md` and the issue's acceptance criteria before anyone treats it as fully settled.
 Nothing downstream waits on that marker being cleared — `issues/FEATURES.md` readiness and `qc`
 both treat `done ⚠️ pending-review` the same as plain `done` — it's purely an opt-in flag for
 whoever wants that extra pass. See `review-issue`'s `SKILL.md` for what it does with it.
@@ -207,7 +208,7 @@ and listing them:
 - **Open `owner: user` issues** — what each one is and what it's waiting on (a credential, a
   decision, an account).
 - **`done ⚠️ placeholder` issues** — what each one is standing in for, so it's easy to tell you have
-  real content ready to swap in (see "Resolving a placeholder" above).
+  real content ready to swap in (see `references/placeholder.md`).
 - **`done ⚠️ pending-review` issues** — a one-line mention that these are ready for the optional
   `review-issue` skill whenever you want that extra pass; not something waiting *on* you the way
   the other two are, just worth surfacing so it doesn't sit invisible in `issues/INDEX.md`.
