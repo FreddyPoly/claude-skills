@@ -30,6 +30,11 @@ When this skill is invoked:
 
 Everything from here on is the subagent's instructions.
 
+`Status` cells in `issues/INDEX.md` / `issues/FEATURES.md` start with an emoji (`✅ done`,
+`🔨 in-progress`, …), and `owner: user` rows show `👤 user`. Follow the "Status emojis" table in
+`doc-to-issues`'s skill file: match on the keyword when reading, and set the matching emoji
+whenever you write a row. Statuses quoted below are bare keywords.
+
 ## Checking for stuck work first
 
 Before selecting a new issue, scan `issues/INDEX.md` for two things that need attention before

@@ -19,6 +19,11 @@ moving to `qc` — not because the pipeline forces it.
 
 ## Selecting an issue
 
+`Status` cells in `issues/INDEX.md` start with an emoji (`✅ done ⚠️ pending-review`,
+`🔨 in-progress`, …). Follow the "Status emojis" table in `doc-to-issues`'s skill file: match on
+the keyword when reading, and set the matching emoji whenever you write a row. Statuses quoted
+below are bare keywords.
+
 Read `issues/INDEX.md`. Pick the first row whose `Status` is `done ⚠️ pending-review` (this marker
 is set by `implement-issue` once its own code-review/security-review gates pass — see its skill
 file). If none exist, report that plainly and stop; there's nothing pending review right now.

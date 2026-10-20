@@ -43,6 +43,10 @@ Read:
 - **`issues/FEATURES.md`** — the recorded per-feature status, to compare against what's actually
   true.
 
+`Status` cells in both tables may start with a decorative emoji (`✅ done`, `🟢 qc-passed`, …), and
+`Owner` cells may read `👤 user` (see "Status emojis" in `doc-to-issues`). Ignore those emojis and
+match on the keyword. Rows without emojis are equally valid.
+
 For each feature, recompute its live status the same way the `qc` skill does: `ready-for-qc` once
 every `owner: agent`/`owner: placeholder` issue under it is `done` (an open `owner: user` issue
 doesn't block this — note it as a caveat instead). Compare that against what `FEATURES.md` has on

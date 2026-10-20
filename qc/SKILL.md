@@ -54,6 +54,11 @@ than launching anything itself.
 
 ## Selecting a feature
 
+`Status` cells in `issues/FEATURES.md` / `issues/INDEX.md` start with an emoji (`🟢 qc-passed`,
+`🔴 qc-failed`, `🧪 ready-for-qc`, …). Follow the "Status emojis" table in `doc-to-issues`'s skill
+file: match on the keyword when reading, and set the matching emoji whenever you write a row.
+Statuses quoted below are bare keywords.
+
 Read `issues/FEATURES.md`. Recompute each feature's readiness live before doing anything else —
 don't trust a stale `Status` column: a feature is `ready-for-qc` once every `owner: agent` and
 `owner: placeholder` issue under `issues/<feature-slug>/` has `status: done`. An open `owner: user`

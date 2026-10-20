@@ -10,6 +10,11 @@ where it's safe and sequencing where it isn't — then review the whole batch to
 of per issue. This is `implement-issue`'s conventions applied at backlog scale, not a different way
 of building things.
 
+`Status` cells in `issues/INDEX.md` / `issues/FEATURES.md` start with an emoji (`✅ done`,
+`🔨 in-progress`, …), and `owner: user` rows show `👤 user`. Follow the "Status emojis" table in
+`doc-to-issues`'s skill file: match on the keyword when reading, and set the matching emoji
+whenever you (the orchestrator) write a row. Statuses quoted below are bare keywords.
+
 ## Checking for stuck work first
 
 Same check as `implement-issue`, run once before planning anything new: scan `issues/INDEX.md` for

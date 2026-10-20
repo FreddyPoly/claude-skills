@@ -134,9 +134,11 @@ changes:
 ```markdown
 | ID | Title | Status | Security | Owner | Depends on |
 |----|-------|--------|----------|-------|------------|
-| auth-001 | ... | open | true | agent | |
-| auth-003 | ... | open | true | user | auth-001 |
+| auth-001 | ... | ⬜ open | true | agent | |
+| auth-003 | ... | ⬜ open | true | 👤 user | auth-001 |
 ```
+
+The `Status` and `Owner` cells carry emojis — see "Status emojis" below.
 
 This is what an agent should read first to find the next unblocked open issue — unblocked meaning
 every ID in `depends_on` has status `done`.
@@ -175,8 +177,8 @@ which whole features are ready for a human to actually test:
 ```markdown
 | Feature | Issues | Status | Last QC |
 |---------|--------|--------|---------|
-| auth | 4/4 done | not-ready | — |
-| billing | 2/5 done (1 stale) | not-ready | — |
+| auth | 4/4 done | ⏳ not-ready | — |
+| billing | 2/5 done (1 stale) | ⏳ not-ready | — |
 ```
 
 When generating or syncing, add a row for every feature folder (new ones start `not-ready`) and
@@ -186,6 +188,37 @@ into the denominator, since a stale issue isn't "remaining open work" the same w
 Otherwise, leave `Status`/`Last QC` alone — `qc` owns recomputing readiness and recording QC
 results — except the one case above (new issues landing on an already-passed/failed feature reset
 it to `not-ready`). Don't remove a feature's row just because a rerun found no new content for it.
+
+## Status emojis
+
+The user reads `INDEX.md` and `FEATURES.md` as raw text, not rendered markdown, so every `Status`
+cell starts with an emoji matching its status keyword. That way the status can be scanned down
+the column. This is the shared table for every skill that writes these files (`doc-to-issues`,
+`implement-issue`, `implement-backlog`, `qc`, `review-issue`):
+
+| Keyword | Emoji | Where |
+|---------|-------|-------|
+| `open` | ⬜ | INDEX |
+| `in-progress` | 🔨 | INDEX and FEATURES |
+| `done` | ✅ | INDEX |
+| `stale` | 🗑️ | INDEX |
+| `not-ready` | ⏳ | FEATURES |
+| `ready-for-qc` | 🧪 | FEATURES |
+| `qc-passed` | 🟢 | FEATURES |
+| `qc-failed` | 🔴 | FEATURES |
+
+- The emoji goes **before** the keyword, separated by one space: `✅ done`, `🔨 in-progress`,
+  `🟢 qc-passed`. The `⚠️` markers keep their place after it: `✅ done ⚠️ pending-review`. Any
+  free-text note after the keyword stays too: `🔨 in-progress (interface-006 rouvert par QC)`.
+- In `INDEX.md`, an `owner: user` row's `Owner` cell is `👤 user` (instead of `user`), so blockers
+  waiting on the user stand out. `agent` and `placeholder` stay plain.
+- Whenever you write or change a row, set the emoji that matches the new keyword, replacing the old
+  one. Never leave a stale emoji (e.g. `⬜ done`).
+- The emojis are decoration. The keyword stays the source of truth, and issue-file frontmatter
+  (`status: open`, `owner: user`) never gets emojis. When **reading** these tables, ignore any
+  leading emoji and match on the keyword. Older rows written before this convention have no emoji
+  and are still valid. Add the emoji when you next rewrite such a row, but don't rewrite every row
+  just to add emojis.
 
 ## Syncing on rerun
 
