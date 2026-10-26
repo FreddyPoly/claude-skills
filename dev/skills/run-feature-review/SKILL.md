@@ -12,7 +12,7 @@ below.
 
 ## Do this
 
-1. Read `~/.claude/skills/dev/skills/review-issue/SKILL.md` in full.
+1. Read `../review-issue/SKILL.md` (relative to this file's folder: the `review-issue` skill next to this one) in full.
 2. Follow it as written, **except** for the overrides in the next section.
 3. End with the result block described at the bottom.
 
