@@ -226,7 +226,7 @@ Apply its findings (overrule one only when you can say why).
 ## Step 5c — Verify against the code (mandatory)
 
 The selection review does not prove the text. Before writing anything to the database, invoke the
-`staging-qa-verify` skill (Skill tool) on the draft folder: it checks every route, UI label, message,
+`chu-team:staging-qa-verify` skill (Skill tool) on the draft folder: it checks every route, UI label, message,
 behaviour, precondition, role feasibility and internal coherence against `origin/staging`, with
 independent Opus subagents, and returns a short report.
 

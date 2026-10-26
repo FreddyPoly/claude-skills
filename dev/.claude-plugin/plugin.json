@@ -1,0 +1,10 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "dev",
+  "version": "1.0.0",
+  "description": "Spec-to-ship issue pipeline: interview, doc-to-issues, implement/review issues, run-feature, qc, report, polish, documentation",
+  "author": {
+    "name": "Frédéric Llorca",
+    "email": "frederic.llorca@chu-montpellier.fr"
+  }
+}

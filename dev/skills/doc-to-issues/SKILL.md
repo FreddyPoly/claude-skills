@@ -194,7 +194,7 @@ it to `not-ready`). Don't remove a feature's row just because a rerun found no n
 The user reads `INDEX.md` and `FEATURES.md` as raw text, not rendered markdown, so every `Status`
 cell starts with an emoji matching its status keyword. That way the status can be scanned down
 the column. This is the shared table for every skill that writes these files (`doc-to-issues`,
-`implement-issue`, `implement-backlog`, `qc`, `review-issue`):
+`implement-issue`, `qc`, `review-issue`):
 
 | Keyword | Emoji | Where |
 |---------|-------|-------|

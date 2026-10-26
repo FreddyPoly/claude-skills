@@ -1,6 +1,6 @@
 ---
 name: implement-issue
-description: Pick up and implement one unblocked issue from a project's issues/ folder (from doc-to-issues), using the issue file as the source of truth so an agent with no memory of the original interview can still build it correctly. Runs the actual work in a dedicated subagent — same model implement-backlog already uses per issue — so the invoking session's context stays clean and only sees the final summary. Only picks up owner: agent/placeholder issues — owner: user issues (credentials, business decisions only the user can supply) are skipped and listed as waiting-on-you; placeholder issues (colors, copy) are built with a flagged default, swapped in later. Checks for issues stuck in-progress from an interrupted session, and done issues flagged needs-review by a security spec change, before picking new work. Covers selecting the issue, code-quality rules (existing conventions, no premature abstraction, TDD when tested), code-review before marking done (plus security-review when security: true), and updating docs/backlog after. Marks a finished issue done ⚠️ pending-review (rather than plain done) so the optional review-issue skill can later give it an independent second pass — this doesn't block anything downstream, including qc. Use to implement the next issue, work the backlog, or invoke /implement-issue. Requires an issues/ folder — if none, use doc-to-issues first.
+description: Pick up and implement one unblocked issue from a project's issues/ folder (from doc-to-issues), using the issue file as the source of truth so an agent with no memory of the original interview can still build it correctly. Runs the actual work in a dedicated subagent so the invoking session's context stays clean and only sees the final summary. Only picks up owner: agent/placeholder issues — owner: user issues (credentials, business decisions only the user can supply) are skipped and listed as waiting-on-you; placeholder issues (colors, copy) are built with a flagged default, swapped in later. Checks for issues stuck in-progress from an interrupted session, and done issues flagged needs-review by a security spec change, before picking new work. Covers selecting the issue, code-quality rules (existing conventions, no premature abstraction, TDD when tested), code-review before marking done (plus security-review when security: true), and updating docs/backlog after. Marks a finished issue done ⚠️ pending-review (rather than plain done) so the optional review-issue skill can later give it an independent second pass — this doesn't block anything downstream, including qc. Use to implement the next issue, work the backlog, or invoke /implement-issue. Requires an issues/ folder — if none, use doc-to-issues first.
 ---
 
 # implement-issue
@@ -12,8 +12,7 @@ this is what makes the backlog usable by an agent that never sat through the ori
 
 This skill's real work (reading the issue, implementing, running reviews, updating bookkeeping)
 runs inside a dedicated `Agent` call, not directly in the conversation that invoked
-`/implement-issue` — the same reason `implement-backlog` already delegates per-issue work to
-subagents: it keeps the orchestrating session's context clean and gives the implementation its own
+`/implement-issue`: it keeps the orchestrating session's context clean and gives the implementation its own
 room to read files, run tests, and iterate without that noise leaking back.
 
 When this skill is invoked:

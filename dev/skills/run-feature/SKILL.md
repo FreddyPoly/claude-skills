@@ -124,7 +124,7 @@ The subagents themselves are never slowed down: the delay only sits between them
      description: "Implement <id>",
      run_in_background: false,
      prompt: "You are the implementation worker of a run-feature loop. Read and follow
-       ~/.claude/skills/run-feature-implement/SKILL.md (it points you to implement-issue).
+       ~/.claude/skills/dev/skills/run-feature-implement/SKILL.md (it points you to implement-issue).
        Issue to implement: <id><, in REWORK mode — rework: true, review feedback is in the issue file>.
        Working directory: <absolute project path>."
    })
@@ -152,7 +152,7 @@ The subagents themselves are never slowed down: the delay only sits between them
      model: "opus",
      run_in_background: false,
      prompt: "You are the independent reviewer of a run-feature loop. Read and follow
-       ~/.claude/skills/run-feature-review/SKILL.md (it points you to review-issue).
+       ~/.claude/skills/dev/skills/run-feature-review/SKILL.md (it points you to review-issue).
        Issue to review: <id>. snapshot_before=<sha> snapshot_after=<sha>.
        Working directory: <absolute project path>."
    })

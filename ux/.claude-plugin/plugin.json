@@ -1,0 +1,10 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "ux",
+  "version": "1.0.0",
+  "description": "UI/UX audit of built screens",
+  "author": {
+    "name": "Frédéric Llorca",
+    "email": "frederic.llorca@chu-montpellier.fr"
+  }
+}

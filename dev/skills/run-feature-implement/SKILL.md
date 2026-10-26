@@ -12,7 +12,7 @@ overrides below.
 
 ## Do this
 
-1. Read `~/.claude/skills/implement-issue/SKILL.md` in full.
+1. Read `~/.claude/skills/dev/skills/implement-issue/SKILL.md` in full.
 2. Follow it exactly as written, **except** for the overrides in the next section.
 3. End with the result block described at the bottom.
 

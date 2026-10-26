@@ -1,0 +1,10 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "chu-team",
+  "version": "1.0.0",
+  "description": "Work workflow: staging QA scenarios, branch review before merge, git worktrees",
+  "author": {
+    "name": "Frédéric Llorca",
+    "email": "frederic.llorca@chu-montpellier.fr"
+  }
+}
