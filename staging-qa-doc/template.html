@@ -1,4 +1,4 @@
-<!-- staging-qa-doc template v17 : la version est aussi consignée dans meta/cycle.templateVersion -->
+<!-- staging-qa-doc template v18 : la version est aussi consignée dans meta/cycle.templateVersion -->
 <title>__TITLE__</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -675,7 +675,7 @@ function deleteCase(c){
 
 /* ---------- captures d'écran ---------- */
 function shotCell(key){
-  var cell = h('div', {class:'shotcell', tabindex:'0', 'aria-label':'Zone de capture : collez une image (Ctrl+V) ou glissez un fichier'});
+  var cell = h('div', {class:'shotcell', tabindex:'0', 'aria-label':'Zone de capture : collez (Ctrl+V) ou glissez une ou plusieurs images'});
   var list = h('div', {class:'shotlist'});
   stepShots(key).forEach(function(sh){
     if (!/^[0-9a-f]{32}$/.test(sh.asset || '')) return;
@@ -695,7 +695,7 @@ function shotCell(key){
     var input = h('input', {type:'file', accept:IMG_TYPES.join(','), multiple:true, class:'sr', id:'shotin-' + key, tabindex:'-1',
       onchange:function(){ addShots(key, input.files); input.value = ''; }});
     cell.appendChild(h('button', {type:'button', class:'shotadd', onclick:function(){ input.click(); }},
-      h('span', null, 'Cliquer pour ajouter une image'), h('small', null, 'ou glissez déposez une image')));
+      h('span', null, 'Cliquer pour ajouter une ou plusieurs images'), h('small', null, 'ou glissez-déposez / collez (Ctrl+V) une ou plusieurs images')));
     cell.appendChild(input);
     cell.addEventListener('paste', function(e){
       var files = [];

@@ -53,8 +53,14 @@ sa fin ou jusqu'à un arrêt qui exige une décision humaine, puis notifie et fa
 - **Le `clear` disparaît** : chaque étape tourne dans un sous-agent à contexte neuf, la session
   principale ne conserve que des résumés d'une ligne. `review-issue` reste indépendant (sous-agent Opus,
   jamais la session qui a implémenté).
-- Invocation : `/run-feature [max=N]`. Plafond par défaut : **10 issues** par lancement (valeur
-  par défaut proposée, modifiable à l'invocation). Relançable : la boucle reprend d'après l'état d'`INDEX.md`,
+- Invocation : `/run-feature [max=N] [pause=M]`. Plafond par défaut : **10 issues** par lancement (valeur
+  par défaut proposée, modifiable à l'invocation).
+- **Temporisation (`pause=M`, en minutes)** : sans option, la fonctionnalité est considérée prioritaire
+  et les étapes s'enchaînent sans délai. Avec `pause=M`, l'orchestrateur attend M minutes entre deux
+  étapes (jamais avant la première ni après un arrêt) pour étaler la consommation de quota d'une
+  fonctionnalité non prioritaire. L'attente se fait par un `sleep` Bash en arrière-plan (le `sleep` au
+  premier plan est bloqué) : l'orchestrateur termine son tour et est réveillé à la fin de la commande ;
+  l'utilisateur peut écrire pendant la pause pour arrêter (`user-stop`) ou sauter l'attente. Relançable : la boucle reprend d'après l'état d'`INDEX.md`,
   qui est la source de vérité, pas la mémoire de la session.
 
 ### Algorithme d'un tour

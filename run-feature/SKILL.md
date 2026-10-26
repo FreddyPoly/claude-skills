@@ -1,6 +1,6 @@
 ---
 name: run-feature
-description: Orchestrate a feature's whole backlog in one command instead of alternating implement-issue and review-issue by hand with a clear before each. Reads issues/INDEX.md each turn and runs the right step in a fresh subagent - open issue → implementation (run-feature-implement, which follows implement-issue), done ⚠️ pending-review → independent Opus review (run-feature-review, which follows review-issue) - strictly impl N → review N → impl N+1. A review fail triggers an automatic rework (max 2 per issue). Stops for the user on security findings, blocked or stuck issues, needs-review flags, a per-issue failure limit, an issue cap, or the end of the agent backlog, then sends a notification and a summary report. Never commits or pushes. Invoke explicitly with /run-feature [max=N]; not for one-off single-issue work (use /implement-issue or /review-issue). Requires issues/INDEX.md (from doc-to-issues).
+description: Orchestrate a feature's whole backlog in one command instead of alternating implement-issue and review-issue by hand with a clear before each. Reads issues/INDEX.md each turn and runs the right step in a fresh subagent - open issue → implementation (run-feature-implement, which follows implement-issue), done ⚠️ pending-review → independent Opus review (run-feature-review, which follows review-issue) - strictly impl N → review N → impl N+1. A review fail triggers an automatic rework (max 2 per issue). Stops for the user on security findings, blocked or stuck issues, needs-review flags, a per-issue failure limit, an issue cap, or the end of the agent backlog, then sends a notification and a summary report. Never commits or pushes. Optional pause=M adds an M-minute delay between steps to spread quota use for a non-priority feature. Invoke explicitly with /run-feature [max=N] [pause=M]; not for one-off single-issue work (use /implement-issue or /review-issue). Requires issues/INDEX.md (from doc-to-issues).
 ---
 
 # run-feature
@@ -21,8 +21,15 @@ stack: `done ⚠️ placeholder ⚠️ pending-review` contains `pending-review`
 
 ## Arguments
 
-`/run-feature [max=N]` — `max` caps how many **distinct issues get their first implementation** in
-this run (reworks don't count). Default **10**. Reaching the cap is a normal stop, not a failure.
+`/run-feature [max=N] [pause=M]` (any order).
+
+- `max` caps how many **distinct issues get their first implementation** in this run (reworks
+  don't count). Default **10**. Reaching the cap is a normal stop, not a failure.
+- `pause` is a delay in **minutes** inserted **between two steps** (after a subagent returns and
+  its result is verified, before the next subagent is launched), to spread quota use over time for
+  a non-priority feature. Default: absent = **no delay** (priority feature, steps chain at once).
+  Integer ≥ 1; reject anything else and stop before starting. No pause before the first step, and
+  none after a STOP (go straight to "At the end").
 
 ## Never
 
@@ -69,7 +76,9 @@ excluded on purpose.
    first and stop.
 2. Confirm you're in a git repository (`git rev-parse --is-inside-work-tree`); if not, stop and say
    snapshots need git.
-3. Parse `max`, set counters: `implemented = 0`, plus a log of every step for the final report.
+3. Parse `max` and `pause`, set counters: `implemented = 0`, plus a log of every step for the final
+   report. If `pause` is set, say so in one line at the start (e.g. `⏳ mode temporisé : 20 min
+   entre chaque étape`).
 4. Load the notification tool once, now, so it is ready at the end:
    `ToolSearch` with query `select:PushNotification` (if unavailable, skip notifications silently).
 
@@ -89,6 +98,20 @@ Each turn: re-read `issues/INDEX.md` (it is the source of truth, not your memory
 
 Rule order enforces the strict alternation: a just-implemented issue is `pending-review`, so rule 4
 fires before rule 5 can start the next one.
+
+### PAUSE (only when `pause` is set)
+
+Between two steps — i.e. when a step ended with "next turn" — wait before the next turn:
+
+1. Print one line: `⏸ pause <M> min (reprise vers <HH:MM>)`.
+2. Start the wait with Bash, **in the background** (foreground `sleep` is blocked):
+   `Bash({ command: "sleep <M*60>", run_in_background: true, description: "Pause entre deux étapes" })`.
+3. End your turn right there, with no other text. The harness wakes you when the command exits;
+   then re-read `INDEX.md` and go on with the loop as usual (the files are the source of truth).
+
+If the user writes during a pause, answer them; if they say to stop, run "At the end" with code
+`user-stop`; if they say to skip the wait, stop the background command (`TaskStop`) and continue.
+The subagents themselves are never slowed down: the delay only sits between them.
 
 ### IMPLEMENT
 
@@ -174,6 +197,7 @@ On any STOP: print a one-line reason, then run "At the end". Reasons and what th
 | `needs-user` / `inconsistent` / `no-snapshot` | worker needs a decision, or index/frontmatter disagree with a worker's report, or snapshots missing | inspect the issue; say precisely what disagreed |
 | `cap` | `max` distinct issues implemented | relaunch `/run-feature` to continue |
 | `backlog-end` | normal end of the agent backlog | review the waiting-on-you list, run `/qc` on the feature when ready |
+| `user-stop` | the user asked to stop during a pause | relaunch `/run-feature` (with or without `pause`) to continue |
 
 Failing tests or build after an implementation are not a separate stop: the implementation worker
 leaves the issue `in-progress` with a blocker note, which surfaces as `blocked`. Pre-existing
