@@ -2,8 +2,8 @@
 name: worktree
 description: >
   Crée un worktree git prêt à l'emploi pour une nouvelle évolution, dans un dossier frère du repo
-  (../<repo>-<branche avec / → ->), basé par défaut sur origin/staging : nouvelle branche sans
-  upstream, copie des .env* ignorés depuis le worktree principal, installation des dépendances
+  (../<repo>-<branche avec / → ->), basé par défaut sur origin/staging : nouvelle branche dont
+  l'upstream est origin/<branche> (jamais la base), copie des .env* ignorés depuis le worktree principal, installation des dépendances
   selon le lockfile, ouverture d'une nouvelle fenêtre VS Code. Gère aussi le nettoyage
   (/worktree remove <branche>) : retrait du worktree, prune, suppression optionnelle de la branche
   locale. Utiliser quand l'utilisateur veut travailler sur une autre branche en parallèle,
@@ -72,12 +72,15 @@ Vérifier `refs/heads/$BRANCH` et `refs/remotes/origin/$BRANCH` (`git show-ref -
 ### 4. Créer le worktree (nouvelle branche)
 
 ```bash
-git -C "$MAIN" worktree add "$DIR" -b "$BRANCH" "$BASE"
-git -C "$DIR" branch --unset-upstream 2>/dev/null || true
+git -C "$MAIN" worktree add --no-track "$DIR" -b "$BRANCH" "$BASE"
+git -C "$DIR" config "branch.$BRANCH.remote" origin
+git -C "$DIR" config "branch.$BRANCH.merge" "refs/heads/$BRANCH"
 ```
 
-Retirer l'upstream évite qu'un futur `git push` vise la branche de base. Le premier push se fera
-avec `git push -u origin "$BRANCH"`.
+`--no-track` empêche la branche de suivre la base (un `git push` partirait sinon vers staging).
+L'upstream est ensuite fixé sur `origin/$BRANCH`, qui n'existe pas encore : un simple `git push`
+crée la branche distante du même nom. Tant qu'elle n'est pas poussée, `git status` affiche
+« upstream is gone » : c'est normal.
 
 ### 4 bis. Ajouter le worktree à la grille `tour`
 
@@ -142,7 +145,7 @@ sortie, **sans** supprimer le worktree.
 ### 8. Compte rendu
 
 Court : dossier, branche, base (avec son commit court), fichiers `.env` copiés, résultat de
-l'installation, ajout à la grille `tour` (ou son échec), commande du premier push. Si
+l'installation, ajout à la grille `tour` (ou son échec), commande du premier push (`git push`). Si
 `git worktree list` montre des worktrees « prunable », le signaler et suggérer `/worktree remove`
 ou `git worktree prune`.
 
