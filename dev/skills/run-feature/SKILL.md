@@ -43,7 +43,8 @@ stack: `done ⚠️ placeholder ⚠️ pending-review` contains `pending-review`
 
 Issue files (`issues/<feature-slug>/<id>*.md`) have YAML frontmatter. You add and maintain four
 fields in it (a missing field means its default). Other skills never write the first three;
-`rework` is also cleared by the implementation worker at the end of a rework.
+`rework` is also cleared by the implementation worker at the end of a rework, and set to `true` by
+`qc` when it reopens an issue (a QC reopen doesn't count in `review_attempts`).
 
 | Field | Default | Meaning |
 |---|---|---|

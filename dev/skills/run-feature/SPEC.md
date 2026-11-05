@@ -183,6 +183,9 @@ s'arrêterait à chaque fail.
   des surcharges : une issue `in-progress` portant `rework: true` n'est pas « coincée » ; la reprendre
   sans demander, en lisant le feedback de review ajouté dans l'issue. À la fin, remettre
   `rework: false`. `implement-issue` utilisé à la main garde son comportement actuel.
+- **Amendement (05/11/2026, décision de l'utilisateur)** : `qc` pose aussi `rework: true` quand il
+  rouvre une issue, pour que la boucle reprenne les retours de recette sans s'arrêter en « stuck ».
+  Ce rework ne compte pas dans `review_attempts` ; le worker lit le retour QC comme un retour de review.
 - Une session interrompue en plein rework reste reprenable : `rework: true` persiste dans le fichier.
 - Une vraie issue coincée (sans le marqueur) reste un arrêt, comme voulu.
 

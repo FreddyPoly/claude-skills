@@ -25,8 +25,10 @@ overrides below.
   `depends_on` check from the user-named-issue paragraph: if a dependency isn't `done`, stop with
   `RESULT: blocked`.
 - **Rework mode.** If the issue's frontmatter has `rework: true`, it was reopened by an independent
-  review: its status is already `in-progress` and a `## Review feedback` section was appended to the
-  issue file. That is *not* stuck work — do not ask the user how to proceed. Read the feedback,
+  review or by `qc`: its status is already `in-progress` and feedback was appended to the issue file
+  (a `## Review feedback` section, or a QC feedback note, e.g. `### Retour QC`). If SPEC.md and the
+  feedback disagree with the issue's original acceptance criteria, the feedback (and SPEC.md) win.
+  That is *not* stuck work — do not ask the user how to proceed. Read the feedback,
   address every point, re-run the acceptance criteria, tests and code-review (plus security-review
   if `security: true`) as usual, then mark the issue `done ⚠️ pending-review` again. Finally set
   `rework: false` in the frontmatter. The issue's earlier work is already in the working tree —

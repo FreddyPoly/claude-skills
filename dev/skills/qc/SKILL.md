@@ -206,6 +206,10 @@ it as failed:
   automated check failed, what was expected per the feature/spec, what actually happened, any
   detail the user gave) — enough that `implement-issue` can pick it back up without re-asking the
   user what went wrong.
+- Also set `rework: true` in that issue's YAML frontmatter (add the field if absent, keep every
+  other field untouched — notably `snapshot_before`, `snapshot_after`, `review_attempts`, which you
+  never edit). This marks it "reopened with feedback" rather than "interrupted", so the
+  `run-feature` loop reworks it without stopping as stuck; the implementation worker clears it.
 - Update `issues/INDEX.md` to reflect the reopened status.
 
 If a feature had already been selected when the failure occurred (a manual scenario, or an
