@@ -125,7 +125,16 @@ Lister les fichiers copiés dans le compte rendu (chemins seulement, jamais leur
 
 ### 6. Installer les dépendances
 
-Selon le lockfile à la racine de `DIR` :
+Les lockfiles ne sont pas forcément à la racine (monorepo `front/` + `server/`, par ex.). Chercher
+tous les lockfiles suivis par git jusqu'à 2 niveaux de profondeur :
+
+```bash
+git -C "$DIR" ls-files -- 'pnpm-lock.yaml' 'package-lock.json' 'yarn.lock' 'bun.lock' 'bun.lockb' 'uv.lock' \
+  '*/pnpm-lock.yaml' '*/package-lock.json' '*/yarn.lock' '*/bun.lock' '*/bun.lockb' '*/uv.lock' \
+  '*/*/pnpm-lock.yaml' '*/*/package-lock.json' '*/*/yarn.lock' '*/*/bun.lock' '*/*/bun.lockb' '*/*/uv.lock'
+```
+
+Pour chaque lockfile trouvé, lancer la commande correspondante **dans son dossier** :
 
 | Lockfile | Commande |
 |---|---|
@@ -133,10 +142,12 @@ Selon le lockfile à la racine de `DIR` :
 | `package-lock.json` | `npm install` |
 | `yarn.lock` | `yarn install` |
 | `bun.lock` / `bun.lockb` | `bun install` |
+| `uv.lock` | `uv sync` |
 | aucun | ne rien faire |
 
-Lancer dans `DIR` avec un timeout long (10 min). En cas d'échec : le signaler avec la fin de la
-sortie, **sans** supprimer le worktree.
+Lancer chaque installation avec un timeout long (10 min). En cas d'échec : le signaler avec la fin
+de la sortie, **sans** supprimer le worktree, et continuer avec les autres dossiers. Le compte rendu
+liste chaque dossier installé et son résultat.
 
 ### 7. Ouvrir VS Code
 
